@@ -40,6 +40,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ projectId, projectName, so
   // Sources state for header display
   const [sources, setSources] = useState<Source[]>([]);
 
+
   // Voice recording hook
   const {
     isRecording,
@@ -313,6 +314,49 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ projectId, projectName, so
     }
   };
 
+  /**
+   * Retry a message - re-send the user's query to get a new AI response
+   * Educational Note: Simply replaces the old AI response with a new one.
+   */
+  const handleRetry = async (userMessageContent: string, aiMessageId: string) => {
+    if (!activeChat || sending) return;
+
+    setSending(true);
+
+    // Remove the old AI response optimistically
+    setActiveChat((prev) => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        messages: prev.messages.filter((m) => m.id !== aiMessageId),
+      };
+    });
+
+    try {
+      const result = await chatsAPI.sendMessage(projectId, activeChat.id, userMessageContent);
+
+      // Add the new assistant message
+      setActiveChat((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          messages: [...prev.messages, result.assistant_message],
+          updated_at: new Date().toISOString(),
+        };
+      });
+
+      // Trigger cost refresh in header
+      onCostsChange?.();
+    } catch (err) {
+      console.error('Error retrying message:', err);
+      error('Failed to retry message');
+      // Reload the chat to restore the original state
+      await loadFullChat(activeChat.id);
+    } finally {
+      setSending(false);
+    }
+  };
+
   // Loading state
   if (loading) {
     return (
@@ -376,7 +420,12 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ projectId, projectName, so
         onShowChatList={() => setShowChatList(true)}
       />
 
-      <ChatMessages messages={activeChat?.messages || []} sending={sending} projectId={projectId} />
+      <ChatMessages
+        messages={activeChat?.messages || []}
+        sending={sending}
+        projectId={projectId}
+        onRetry={handleRetry}
+      />
 
       <ChatInput
         message={message}
