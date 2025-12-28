@@ -119,3 +119,52 @@ When refactoring an agent:
 - 150-line agent (orchestration only)
 - 200-line executor (tool logic)
 - Clear separation, easy to test, easy to extend
+
+---
+
+## Refactored Agents
+
+| Agent | Before | After | Executor | Status |
+|-------|--------|-------|----------|--------|
+| `blog_agent_service.py` | 534 lines | 202 lines | `blog_tool_executor.py` (232 lines) | Done |
+| `website_agent_service.py` | 760 lines | 197 lines | `website_tool_executor.py` (338 lines) | Done |
+| `business_report_agent_service.py` | 619 lines | 299 lines | `business_report_tool_executor.py` (280 lines) | Done |
+
+---
+
+## Shared Utilities
+
+| Utility | Location | Purpose | Used By |
+|---------|----------|---------|---------|
+| `get_source_content()` | `app/utils/source_content_utils.py` | Load source content with smart sampling for large sources | blog_agent, website_agent |
+| `get_source_name()` | `app/utils/source_content_utils.py` | Get source name by ID | (available) |
+
+---
+
+## Prompt Config Pattern
+
+User messages and mappings should be in prompt JSON configs, not hardcoded in agents.
+
+```json
+// data/prompts/{agent}_prompt.json
+{
+  "model": "claude-sonnet-4-5-20250929",
+  "temperature": 0.6,
+  "max_tokens": 16000,
+  "user_message": "Create content based on:\n{source_content}\n\nDirection: {direction}",
+  "some_types": {
+    "type_a": "Display Name A",
+    "type_b": "Display Name B"
+  },
+  "system_prompt": "..."
+}
+```
+
+Agent uses:
+```python
+config = prompt_loader.get_prompt_config("agent_name")
+user_message = config.get("user_message", "").format(
+    source_content=source_content,
+    direction=direction
+)
+```
