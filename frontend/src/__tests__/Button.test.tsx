@@ -1,22 +1,22 @@
-import { describe, it, expect } from 'vitest'
-import { render, screen } from '@testing-library/react'
-import { Button } from '../components/ui/button'
+import { describe, it, expect } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import { Button } from '../components/ui/button';
 
 describe('Button', () => {
   it('should render button with text', () => {
-    render(<Button>Click me</Button>)
-    expect(screen.getByText('Click me')).toBeInTheDocument()
-  })
+    render(<Button>Click me</Button>);
+    expect(screen.getByText('Click me')).toBeInTheDocument();
+  });
 
   it('should apply variant classes', () => {
-    render(<Button variant="destructive">Delete</Button>)
-    const button = screen.getByText('Delete')
-    expect(button).toBeInTheDocument()
-  })
+    render(<Button variant="destructive">Delete</Button>);
+    const button = screen.getByText('Delete');
+    expect(button).toBeInTheDocument();
+  });
 
   it('should be disabled when disabled prop is true', () => {
-    render(<Button disabled>Disabled</Button>)
-    const button = screen.getByText('Disabled')
-    expect(button).toBeDisabled()
-  })
-})
+    render(<Button disabled>Disabled</Button>);
+    const button = screen.getByText('Disabled');
+    expect(button).toBeDisabled();
+  });
+});

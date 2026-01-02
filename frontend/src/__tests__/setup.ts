@@ -1,10 +1,10 @@
-import '@testing-library/jest-dom'
-import { cleanup } from '@testing-library/react'
-import { afterEach } from 'vitest'
+import '@testing-library/jest-dom';
+import { cleanup } from '@testing-library/react';
+import { afterEach } from 'vitest';
 
 afterEach(() => {
-  cleanup()
-})
+  cleanup();
+});
 
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
@@ -18,14 +18,14 @@ Object.defineProperty(window, 'matchMedia', {
     removeEventListener: () => {},
     dispatchEvent: () => {},
   }),
-})
+});
 
 global.IntersectionObserver = class IntersectionObserver {
   constructor() {}
   disconnect() {}
   observe() {}
   takeRecords() {
-    return []
+    return [];
   }
   unobserve() {}
-} as any
+} as any;
