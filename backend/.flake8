@@ -1,0 +1,31 @@
+[flake8]
+max-line-length = 100
+extend-ignore = 
+    # E203: whitespace before ':' (conflicts with black)
+    E203,
+    # E501: line too long (handled by black)
+    E501,
+    # W503: line break before binary operator (conflicts with black)
+    W503,
+    # E266: too many leading '#' for block comment
+    E266,
+    # E731: do not assign a lambda expression
+    E731,
+    # F401: imported but unused (often false positives with __init__.py)
+    F401,
+exclude = 
+    .git,
+    __pycache__,
+    .venv,
+    venv,
+    data,
+    build,
+    dist,
+    *.egg-info,
+    .pytest_cache,
+    .mypy_cache,
+    htmlcov,
+per-file-ignores = 
+    __init__.py:F401
+    tests/*:F401,F811
+max-complexity = 15
