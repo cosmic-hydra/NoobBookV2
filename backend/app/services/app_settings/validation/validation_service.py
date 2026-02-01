@@ -15,6 +15,7 @@ from app.services.app_settings.validation.nano_banana_validator import validate_
 from app.services.app_settings.validation.veo_validator import validate_veo_key
 from app.services.app_settings.validation.tavily_validator import validate_tavily_key
 from app.services.app_settings.validation.pinecone_validator import validate_pinecone_key
+from app.services.app_settings.validation.perplexity_validator import validate_perplexity_key
 
 
 class ValidationService:
@@ -57,3 +58,7 @@ class ValidationService:
     def validate_pinecone_key(self, api_key: str) -> Tuple[bool, str, Optional[Dict[str, str]]]:
         """Validate a Pinecone API key and auto-create index if needed."""
         return validate_pinecone_key(api_key)
+
+    def validate_perplexity_key(self, api_key: str) -> Tuple[bool, str]:
+        """Validate a Perplexity API key."""
+        return validate_perplexity_key(api_key)

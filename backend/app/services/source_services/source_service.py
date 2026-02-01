@@ -307,14 +307,15 @@ class SourceService:
         project_id: str,
         topic: str,
         description: str,
-        links: List[str] = None
+        links: List[str] = None,
+        provider: str = "claude"
     ) -> Dict[str, Any]:
         """
         Add a deep research source to a project.
 
         Delegates to source_upload.research_upload module.
         """
-        return upload_research(project_id, topic, description, links)
+        return upload_research(project_id, topic, description, links, provider)
 
     # =========================================================================
     # Processing Delegation (thin wrappers)

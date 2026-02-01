@@ -70,7 +70,8 @@ PINECONE_INDEX_NAME=...
 
 # Optional
 ELEVENLABS_API_KEY=...          # Audio features
-TAVILY_API_KEY=...              # Web search fallback
+TAVILY_API_KEY=...              # Web search fallback (used by Claude research)
+PERPLEXITY_API_KEY=...          # Perplexity research provider
 GOOGLE_CLIENT_ID=...            # Google Drive import
 GOOGLE_CLIENT_SECRET=...
 ANTHROPIC_TIER=1                # 1-4, controls rate limits
@@ -359,6 +360,37 @@ Types: PDF, TEXT, DOCX, PPTX, AUDIO, IMAGE, LINK, YOUTUBE
 | **YouTube** | `integrations/youtube/youtube_service.py` | No AI - youtube-transcript-api | Single page |
 
 **Design**: Raw files preserved on error (retry without re-upload). Processing runs in background threads. Tool-based extraction ensures structured output.
+
+## Deep Research Sources
+
+Deep research sources support two provider options:
+
+### Research Providers
+
+**1. Claude Deep Research (Default)**
+- Uses `DeepResearchAgent` with agentic loop pattern
+- Tools: `web_search` (server), `tavily_search_advance` (client), `write_research_to_file`
+- Agent iteratively searches, analyzes, and writes research segments
+- Terminates when `is_last_segment=true`
+- Comprehensive, strategic research with inline citations
+
+**2. Perplexity + Claude Cross-check**
+- Two-step process for high-quality research:
+  1. Perplexity generates draft with `sonar` model (online search enabled)
+  2. Claude reviews draft with `research_crosscheck` prompt
+- Cross-check verifies accuracy, improves structure, fills gaps
+- Combines Perplexity's search power with Claude's quality review
+- Preserves citations from both stages
+
+### Research Flow
+
+Frontend → Backend Route → `research_processor.py`:
+- Reads `.research` JSON with `provider` field
+- Routes to `_research_with_claude()` or `_research_with_perplexity()`
+- Both write to same processed file format
+- Standard embedding + summary pipeline follows
+
+Provider selection persisted in research request, allowing future retry with same provider.
 
 ### Text Utilities (`app/utils/text/`)
 

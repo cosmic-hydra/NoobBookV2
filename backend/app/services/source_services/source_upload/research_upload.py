@@ -25,26 +25,28 @@ def upload_research(
     project_id: str,
     topic: str,
     description: str,
-    links: List[str] = None
+    links: List[str] = None,
+    provider: str = "claude"
 ) -> Dict[str, Any]:
     """
     Create a deep research source for a project.
 
     Educational Note: This creates a .research file containing the research
     parameters. The actual research is performed by a background task using
-    an AI agent with web search capabilities.
+    either Claude's DeepResearchAgent or Perplexity with Claude cross-check.
 
     Args:
         project_id: The project UUID
         topic: The main research topic (required)
         description: Focus areas and questions to answer (required, min 50 chars)
         links: Optional list of reference URLs to analyze
+        provider: Research provider - "claude" (default) or "perplexity"
 
     Returns:
         Source metadata dictionary
 
     Raises:
-        ValueError: If topic or description is invalid
+        ValueError: If topic, description, or provider is invalid
     """
     # Validate inputs
     if not topic or not topic.strip():
@@ -52,6 +54,12 @@ def upload_research(
 
     if not description or len(description.strip()) < 50:
         raise ValueError("Description must be at least 50 characters")
+
+    # Validate provider
+    valid_providers = ["claude", "perplexity"]
+    provider = provider.lower().strip() if provider else "claude"
+    if provider not in valid_providers:
+        raise ValueError(f"Invalid provider. Must be one of: {', '.join(valid_providers)}")
 
     topic = topic.strip()
     description = description.strip()
@@ -77,6 +85,7 @@ def upload_research(
         "topic": topic,
         "description": description,
         "links": validated_links,
+        "provider": provider,
         "created_at": datetime.now().isoformat()
     }
 
@@ -108,7 +117,8 @@ def upload_research(
         "processing_info": {
             "source_type": "deep_research",
             "topic": topic,
-            "link_count": len(validated_links)
+            "link_count": len(validated_links),
+            "provider": provider
         },
         "created_at": timestamp,
         "updated_at": timestamp

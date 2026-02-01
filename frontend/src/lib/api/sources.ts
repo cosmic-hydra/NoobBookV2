@@ -309,12 +309,18 @@ class SourcesAPI {
     projectId: string,
     topic: string,
     description: string,
-    links?: string[]
+    links?: string[],
+    provider?: string
   ): Promise<Source> {
     try {
       const response = await axios.post(
         `${API_BASE_URL}/projects/${projectId}/sources/research`,
-        { topic, description, links: links || [] }
+        { 
+          topic, 
+          description, 
+          links: links || [],
+          provider: provider || 'claude'  // Default to Claude
+        }
       );
       return response.data.source;
     } catch (error) {

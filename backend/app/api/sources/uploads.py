@@ -202,9 +202,9 @@ def add_research_source(project_id: str):
     Add a deep research source to a project.
 
     Educational Note: Research sources demonstrate autonomous AI agents:
-    1. User provides topic and focus areas
-    2. AI agent uses web_search to find relevant sources
-    3. Agent synthesizes information into a research document
+    1. User provides topic, focus areas, and provider choice
+    2. For Claude: AI agent uses web_search to find sources and synthesizes
+    3. For Perplexity: Perplexity generates draft, Claude cross-checks
     4. Document is processed like any other text source
 
     This is a LONG-RUNNING operation:
@@ -216,7 +216,8 @@ def add_research_source(project_id: str):
         {
             "topic": "Quantum Computing Applications",    # required
             "description": "Focus on cryptography and...", # required (min 50 chars)
-            "links": ["https://reference1.com", ...]      # optional seed URLs
+            "links": ["https://reference1.com", ...],     # optional seed URLs
+            "provider": "claude" or "perplexity"          # optional (default: "claude")
         }
 
     Returns:
@@ -237,6 +238,7 @@ def add_research_source(project_id: str):
 
         topic = data.get('topic')
         description = data.get('description')
+        provider = data.get('provider', 'claude')  # Default to Claude
 
         if not topic:
             return jsonify({
@@ -254,7 +256,8 @@ def add_research_source(project_id: str):
             project_id=project_id,
             topic=topic,
             description=description,
-            links=data.get('links', [])
+            links=data.get('links', []),
+            provider=provider
         )
 
         return jsonify({

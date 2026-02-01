@@ -296,7 +296,12 @@ export const SourcesPanel: React.FC<SourcesPanelProps> = ({ projectId, isCollaps
    * Educational Note: Triggers an AI agent to research a topic and
    * create a comprehensive source document from the findings.
    */
-  const handleAddResearch = async (topic: string, description: string, links: string[]) => {
+  const handleAddResearch = async (
+    topic: string, 
+    description: string, 
+    links: string[],
+    provider: string
+  ) => {
     // Check source limit
     if (sources.length >= MAX_SOURCES) {
       error(`Cannot add. Maximum ${MAX_SOURCES} sources allowed.`);
@@ -304,8 +309,8 @@ export const SourcesPanel: React.FC<SourcesPanelProps> = ({ projectId, isCollaps
     }
 
     try {
-      await sourcesAPI.addResearchSource(projectId, topic, description, links);
-      success('Deep research started - this may take a few minutes');
+      await sourcesAPI.addResearchSource(projectId, topic, description, links, provider);
+      success(`${provider === 'perplexity' ? 'Perplexity + Claude' : 'Claude'} research started - this may take a few minutes`);
       await loadSources();
       setSheetOpen(false);
     } catch (err: unknown) {
