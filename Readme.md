@@ -16,6 +16,18 @@
   <a href="https://noobbooklm.com">noobbooklm.com</a>
 </p>
 
+<p align="center">
+  <a href="https://github.com/cosmic-hydra/NoobBookV2/actions/workflows/backend-ci.yml">
+    <img src="https://github.com/cosmic-hydra/NoobBookV2/actions/workflows/backend-ci.yml/badge.svg" alt="Backend CI">
+  </a>
+  <a href="https://github.com/cosmic-hydra/NoobBookV2/actions/workflows/frontend-ci.yml">
+    <img src="https://github.com/cosmic-hydra/NoobBookV2/actions/workflows/frontend-ci.yml/badge.svg" alt="Frontend CI">
+  </a>
+  <a href="https://codecov.io/gh/cosmic-hydra/NoobBookV2">
+    <img src="https://codecov.io/gh/cosmic-hydra/NoobBookV2/branch/develop/graph/badge.svg" alt="Code Coverage">
+  </a>
+</p>
+
 ---
 
 ### First Believer & Primary Sponsor
