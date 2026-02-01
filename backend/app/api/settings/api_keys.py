@@ -111,6 +111,12 @@ API_KEYS_CONFIG = [
         'category': 'utility'
     },
     {
+        'id': 'PERPLEXITY_API_KEY',
+        'name': 'Perplexity AI',
+        'description': 'Research AI with online search',
+        'category': 'utility'
+    },
+    {
         'id': 'GOOGLE_CLIENT_ID',
         'name': 'Google Client ID',
         'description': 'Google OAuth client ID for Drive integration',
@@ -394,6 +400,9 @@ def _validate_key(key_id: str, value: str) -> tuple[bool, str]:
 
     elif key_id == 'TAVILY_API_KEY':
         return validation_service.validate_tavily_key(value)
+
+    elif key_id == 'PERPLEXITY_API_KEY':
+        return validation_service.validate_perplexity_key(value)
 
     elif key_id == 'PINECONE_API_KEY':
         # Pinecone validation also creates/checks index

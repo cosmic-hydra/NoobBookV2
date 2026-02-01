@@ -1,19 +1,21 @@
 """
 Research Processor - Handles deep research source processing.
 
-Educational Note: This processor orchestrates an AI agent that:
-1. Reads the research request (.research JSON file)
-2. Uses web search to find relevant information
-3. Fetches and analyzes provided reference links
-4. Synthesizes findings into a comprehensive document
-5. Saves the result for embedding and chat context
+Educational Note: This processor orchestrates research using different providers:
+1. Claude (default): Uses DeepResearchAgent with web search tool loop
+2. Perplexity: Uses Perplexity AI for draft, then Claude cross-check
 
-The output follows the standard processed format with page markers.
+Processing steps:
+1. Reads the research request (.research JSON file)
+2. Routes to appropriate provider based on request
+3. For Perplexity: draft → cross-check → finalize
+4. For Claude: existing agentic loop behavior
+5. Saves result, runs embeddings, generates summary
 """
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 from app.utils.text import build_processed_output
 from app.utils.path_utils import get_processed_dir, get_chunks_dir
@@ -58,26 +60,36 @@ def process_research(
     topic = research_request.get("topic", "Unknown Topic")
     description = research_request.get("description", "")
     links = research_request.get("links", [])
+    provider = research_request.get("provider", "claude")  # Default to Claude
 
     source_name = source.get("name", topic)
 
-    print(f"Starting deep research for: {topic}")
+    print(f"Starting research for: {topic}")
+    print(f"Provider: {provider}")
     print(f"Description: {description[:100]}...")
     print(f"Reference links: {len(links)}")
 
     try:
-        # Run the deep research agent
-        # Agent writes directly to processed file via executor
-        from app.services.ai_agents.deep_research_agent import deep_research_agent
-
-        research_result = deep_research_agent.research(
-            project_id=project_id,
-            source_id=source_id,
-            topic=topic,
-            description=description,
-            links=links,
-            output_path=str(processed_path)
-        )
+        # Route to appropriate research method based on provider
+        if provider == "perplexity":
+            research_result = _research_with_perplexity(
+                project_id=project_id,
+                source_id=source_id,
+                topic=topic,
+                description=description,
+                links=links,
+                processed_path=processed_path
+            )
+        else:
+            # Default to Claude DeepResearchAgent
+            research_result = _research_with_claude(
+                project_id=project_id,
+                source_id=source_id,
+                topic=topic,
+                description=description,
+                links=links,
+                processed_path=processed_path
+            )
 
         if not research_result.get("success"):
             raise Exception(research_result.get("error", "Research failed"))
@@ -234,3 +246,130 @@ def _generate_summary(
     except Exception as e:
         print(f"Error generating summary for research {source_id}: {e}")
         return {}
+
+
+def _research_with_claude(
+    project_id: str,
+    source_id: str,
+    topic: str,
+    description: str,
+    links: List[str],
+    processed_path: Path
+) -> Dict[str, Any]:
+    """
+    Execute research using Claude's DeepResearchAgent.
+
+    Educational Note: This is the original research method using
+    Claude's agentic loop with web search tools.
+
+    Args:
+        project_id: Project UUID
+        source_id: Source UUID
+        topic: Research topic
+        description: Research focus
+        links: Reference URLs
+        processed_path: Path to write output
+
+    Returns:
+        Dict with success status and metadata
+    """
+    from app.services.ai_agents.deep_research_agent import deep_research_agent
+
+    print("[Claude] Running DeepResearchAgent")
+    
+    return deep_research_agent.research(
+        project_id=project_id,
+        source_id=source_id,
+        topic=topic,
+        description=description,
+        links=links,
+        output_path=str(processed_path)
+    )
+
+
+def _research_with_perplexity(
+    project_id: str,
+    source_id: str,
+    topic: str,
+    description: str,
+    links: List[str],
+    processed_path: Path
+) -> Dict[str, Any]:
+    """
+    Execute research using Perplexity with Claude cross-check.
+
+    Educational Note: This two-step process:
+    1. Perplexity generates draft research with citations
+    2. Claude reviews and improves the draft
+
+    Args:
+        project_id: Project UUID
+        source_id: Source UUID
+        topic: Research topic
+        description: Research focus
+        links: Reference URLs
+        processed_path: Path to write output
+
+    Returns:
+        Dict with success status and metadata
+    """
+    from app.services.integrations.perplexity import perplexity_service
+    from app.services.ai_services.crosscheck_service import crosscheck_service
+
+    print("[Perplexity] Step 1: Generating draft research")
+    
+    # Step 1: Get draft from Perplexity
+    perplexity_result = perplexity_service.research(
+        topic=topic,
+        description=description,
+        links=links
+    )
+
+    if not perplexity_result.get("success"):
+        error = perplexity_result.get("error", "Perplexity research failed")
+        raise Exception(error)
+
+    draft_content = perplexity_result.get("content", "")
+    citations = perplexity_result.get("citations", [])
+    perplexity_usage = perplexity_result.get("usage", {})
+
+    print(f"[Perplexity] Draft complete: {len(draft_content)} chars, {len(citations)} citations")
+
+    # Step 2: Cross-check with Claude
+    print("[Claude] Step 2: Cross-checking and improving draft")
+    
+    crosscheck_result = crosscheck_service.crosscheck_research(
+        draft_content=draft_content,
+        topic=topic,
+        description=description,
+        links=links,
+        citations=citations,
+        project_id=project_id
+    )
+
+    if not crosscheck_result.get("success"):
+        error = crosscheck_result.get("error", "Cross-check failed")
+        raise Exception(error)
+
+    final_content = crosscheck_result.get("content", "")
+    claude_usage = crosscheck_result.get("usage", {})
+
+    print(f"[Claude] Cross-check complete: {len(final_content)} chars")
+
+    # Write final content to file
+    with open(processed_path, "w", encoding="utf-8") as f:
+        f.write(final_content)
+
+    # Return result in standard format
+    return {
+        "success": True,
+        "output_path": str(processed_path),
+        "segments_written": 1,  # Single segment for Perplexity
+        "iterations": 2,  # Perplexity + Claude crosscheck
+        "usage": {
+            "perplexity": perplexity_usage,
+            "claude": claude_usage
+        },
+        "citations": citations
+    }
+
