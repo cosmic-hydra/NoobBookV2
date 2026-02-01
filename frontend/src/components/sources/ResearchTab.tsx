@@ -11,7 +11,7 @@ import { Input } from '../ui/input';
 import { MagnifyingGlass, CircleNotch, Plus, X } from '@phosphor-icons/react';
 
 interface ResearchTabProps {
-  onAddResearch: (topic: string, description: string, links: string[]) => Promise<void>;
+  onAddResearch: (topic: string, description: string, links: string[], provider: string) => Promise<void>;
   isAtLimit: boolean;
 }
 
@@ -22,6 +22,7 @@ export const ResearchTab: React.FC<ResearchTabProps> = ({ onAddResearch, isAtLim
   const [description, setDescription] = useState('');
   const [links, setLinks] = useState<string[]>([]);
   const [newLink, setNewLink] = useState('');
+  const [provider, setProvider] = useState<'claude' | 'perplexity'>('claude');
   const [researching, setResearching] = useState(false);
 
   /**
@@ -32,11 +33,12 @@ export const ResearchTab: React.FC<ResearchTabProps> = ({ onAddResearch, isAtLim
 
     setResearching(true);
     try {
-      await onAddResearch(topic.trim(), description.trim(), links);
+      await onAddResearch(topic.trim(), description.trim(), links, provider);
       setTopic('');
       setDescription('');
       setLinks([]);
       setNewLink('');
+      setProvider('claude'); // Reset to default
     } finally {
       setResearching(false);
     }
@@ -133,6 +135,58 @@ export const ResearchTab: React.FC<ResearchTabProps> = ({ onAddResearch, isAtLim
         </div>
       </div>
 
+      {/* Provider Selection */}
+      <div>
+        <label className="text-sm font-medium mb-2 block">
+          Research Provider
+        </label>
+        <div className="space-y-2">
+          <label className={`flex items-center p-3 border rounded-md cursor-pointer transition-colors ${
+            provider === 'claude' 
+              ? 'border-amber-600 bg-amber-50' 
+              : 'border-stone-300 hover:border-stone-400'
+          } ${researching ? 'opacity-50 cursor-not-allowed' : ''}`}>
+            <input
+              type="radio"
+              name="provider"
+              value="claude"
+              checked={provider === 'claude'}
+              onChange={(e) => setProvider(e.target.value as 'claude' | 'perplexity')}
+              disabled={researching}
+              className="mr-3"
+            />
+            <div className="flex-1">
+              <p className="font-medium text-sm">Claude Deep Research (Default)</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                AI agent with web search - comprehensive, strategic research
+              </p>
+            </div>
+          </label>
+          
+          <label className={`flex items-center p-3 border rounded-md cursor-pointer transition-colors ${
+            provider === 'perplexity' 
+              ? 'border-amber-600 bg-amber-50' 
+              : 'border-stone-300 hover:border-stone-400'
+          } ${researching ? 'opacity-50 cursor-not-allowed' : ''}`}>
+            <input
+              type="radio"
+              name="provider"
+              value="perplexity"
+              checked={provider === 'perplexity'}
+              onChange={(e) => setProvider(e.target.value as 'claude' | 'perplexity')}
+              disabled={researching}
+              className="mr-3"
+            />
+            <div className="flex-1">
+              <p className="font-medium text-sm">Perplexity + Claude Cross-check</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Perplexity generates draft, Claude reviews and improves
+              </p>
+            </div>
+          </label>
+        </div>
+      </div>
+
       {/* Links Input */}
       <div>
         <label className="text-sm font-medium mb-2 block">
@@ -186,12 +240,25 @@ export const ResearchTab: React.FC<ResearchTabProps> = ({ onAddResearch, isAtLim
 
       {/* Info Box */}
       <div className="bg-muted/50 rounded-lg p-3 text-sm text-muted-foreground">
-        <p className="font-medium text-foreground mb-1">How Deep Research works:</p>
+        <p className="font-medium text-foreground mb-1">
+          {provider === 'claude' ? 'Claude Deep Research:' : 'Perplexity + Claude:'}
+        </p>
         <ul className="list-disc list-inside space-y-1 text-xs">
-          <li>AI agent searches the web for relevant information</li>
-          <li>Analyzes any provided reference links</li>
-          <li>Synthesizes findings into a comprehensive document</li>
-          <li>Creates a source you can query in your chats</li>
+          {provider === 'claude' ? (
+            <>
+              <li>AI agent searches the web for relevant information</li>
+              <li>Analyzes any provided reference links</li>
+              <li>Synthesizes findings into a comprehensive document</li>
+              <li>Creates a source you can query in your chats</li>
+            </>
+          ) : (
+            <>
+              <li>Perplexity generates draft research with citations</li>
+              <li>Claude reviews and improves the draft for quality</li>
+              <li>Cross-checks accuracy and fills gaps</li>
+              <li>Creates a polished source for your chats</li>
+            </>
+          )}
         </ul>
       </div>
 
