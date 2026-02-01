@@ -208,7 +208,8 @@ Create `backend/.env` or configure in **Dashboard -> Settings**:
 
 **Optional:**
 - `ELEVENLABS_API_KEY` - Audio features
-- `TAVILY_API_KEY` - Web search
+- `TAVILY_API_KEY` - Web search (used by Claude research)
+- `PERPLEXITY_API_KEY` - Perplexity research provider
 - `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` - Google Drive import
 
 ---
